@@ -15,7 +15,10 @@ import {
   Award, 
   AlertTriangle,
   Maximize2,
-  Menu
+  Menu,
+  Heart,
+  MessageSquare,
+  PlusSquare
 } from 'lucide-react';
 import './App.css';
 import { Client } from '@stomp/stompjs';
@@ -38,6 +41,8 @@ function App() {
 
   // UI state
   const [activeTab, setActiveTab] = useState('hub');
+  const [isScorePanelOpen, setIsScorePanelOpen] = useState(false);
+  const [activeAdminModal, setActiveAdminModal] = useState(null); // null, 'add', 'edit', 'delete'
   const [games, setGames] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [currentGame, setCurrentGame] = useState(null);
@@ -146,6 +151,11 @@ function App() {
   const loadLeaderboardRef = useRef(loadLeaderboard);
   const activeTabRef = useRef(activeTab);
   const userRef = useRef(user);
+  const isScorePanelOpenRef = useRef(isScorePanelOpen);
+
+  useEffect(() => {
+    isScorePanelOpenRef.current = isScorePanelOpen;
+  }, [isScorePanelOpen]);
 
   useEffect(() => {
     loadLeaderboardRef.current = loadLeaderboard;
@@ -190,8 +200,10 @@ function App() {
             const data = JSON.parse(message.body);
             console.log('Real-time standings update received:', data);
             
-            // 1. Trigger automatic refresh of leaderboard data via ref
-            loadLeaderboardRef.current();
+            // 1. Trigger automatic refresh of leaderboard data via ref if panel is open
+            if (isScorePanelOpenRef.current) {
+              loadLeaderboardRef.current();
+            }
             
             // 2. Set beautiful real-time toast notification if it's not the current user
             if (!userRef.current || data.userId !== userRef.current.id) {
@@ -227,12 +239,12 @@ function App() {
     loadGames();
   }, []);
 
-  // Reload leaderboard whenever filters change or view becomes active
+  // Reload leaderboard whenever filters change or score panel is open
   useEffect(() => {
-    if (activeTab === 'leaderboard') {
+    if (isScorePanelOpen) {
       loadLeaderboard();
     }
-  }, [activeTab, filterPeriod, filterGameId]);
+  }, [isScorePanelOpen, filterPeriod, filterGameId]);
 
   // postMessage Listener for Game SDK Score Submissions
   useEffect(() => {
@@ -392,6 +404,7 @@ function App() {
           isActive: true
         });
         setIsEditingGame(false);
+        setActiveAdminModal(null);
         loadGames();
       } else {
         let errMsg = 'Falha ao salvar o jogo.';
@@ -419,6 +432,7 @@ function App() {
       });
       if (response.ok) {
         setAlert({ type: 'success', message: 'Jogo removido com sucesso.' });
+        setActiveAdminModal(null);
         loadGames();
         if (currentGame && currentGame.id === gameId) {
           setCurrentGame(null);
@@ -449,6 +463,15 @@ function App() {
   // Check if current user is admin
   const isAdmin = user && user.role === 'admin';
 
+  const handleHomeClick = () => {
+    setIsScorePanelOpen(false);
+    setActiveAdminModal(null);
+  };
+
+  const handleScoreClick = () => {
+    setIsScorePanelOpen(!isScorePanelOpen);
+  };
+
   return (
     <div className="app-layout">
       {/* Background Layers */}
@@ -463,29 +486,56 @@ function App() {
 
         <nav className="nav-links">
           <button 
-            className={`nav-item ${activeTab === 'hub' ? 'active' : ''}`}
-            onClick={() => setActiveTab('hub')}
-            title="Hub de Jogos"
+            className={`nav-item ${(!isScorePanelOpen && !activeAdminModal) ? 'active' : ''}`}
+            onClick={handleHomeClick}
+            title="Início"
           >
             <Home size={24} />
           </button>
           
           <button 
-            className={`nav-item ${activeTab === 'leaderboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('leaderboard')}
-            title="Classificação"
+            className={`nav-item ${isScorePanelOpen ? 'active' : ''}`}
+            onClick={handleScoreClick}
+            title="Score"
           >
-            <Trophy size={24} />
+            <Heart size={24} />
           </button>
+          
+          <div className="notif-wrapper">
+            <button 
+              className="nav-item" 
+              title="Mensagens" 
+              onClick={() => setAlert({ type: 'info', message: 'Você não possui novas mensagens.' })}
+            >
+              <MessageSquare size={24} />
+            </button>
+            <span className="badge"></span>
+          </div>
 
           {isAdmin && (
-            <button 
-              className={`nav-item ${activeTab === 'admin' ? 'active' : ''}`}
-              onClick={() => setActiveTab('admin')}
-              title="Administração"
-            >
-              <Settings size={24} />
-            </button>
+            <>
+              <button 
+                className={`nav-item ${activeAdminModal === 'add' ? 'active' : ''}`}
+                onClick={() => { setActiveAdminModal('add'); setIsScorePanelOpen(false); }}
+                title="Adicionar Jogo"
+              >
+                <PlusSquare size={24} />
+              </button>
+              <button 
+                className={`nav-item ${activeAdminModal === 'edit' ? 'active' : ''}`}
+                onClick={() => { setActiveAdminModal('edit'); setIsScorePanelOpen(false); }}
+                title="Editar Jogo"
+              >
+                <Edit3 size={24} />
+              </button>
+              <button 
+                className={`nav-item ${activeAdminModal === 'delete' ? 'active' : ''}`}
+                onClick={() => { setActiveAdminModal('delete'); setIsScorePanelOpen(false); }}
+                title="Remover Jogo"
+              >
+                <Trash2 size={24} />
+              </button>
+            </>
           )}
         </nav>
       </aside>
@@ -496,24 +546,8 @@ function App() {
         {/* Dynamic header matching boilerplate top-bar */}
         <header className="top-bar">
           <div className="brand">
-            {activeTab === 'hub' && (
-              <>
-                <h1>Nexus Hub</h1>
-                <p>JOGOS DISPONÍVEIS</p>
-              </>
-            )}
-            {activeTab === 'leaderboard' && (
-              <>
-                <h1>Nexus Classificação</h1>
-                <p>RANKING EM TEMPO REAL</p>
-              </>
-            )}
-            {activeTab === 'admin' && (
-              <>
-                <h1>Nexus Admin</h1>
-                <p>GERENCIAMENTO DE CATÁLOGO</p>
-              </>
-            )}
+            <h1>Nexus Hub</h1>
+            <p>JOGOS DISPONÍVEIS</p>
           </div>
           
           <div className="user-profile" onClick={() => !user && setShowLoginModal(true)}>
@@ -525,7 +559,7 @@ function App() {
                 </button>
               </div>
             ) : (
-              <span>Entrar no Nexus</span>
+              <span>Clique para fazer login</span>
             )}
           </div>
         </header>
@@ -538,417 +572,381 @@ function App() {
           </div>
         )}
 
-        {/* HUB TAB */}
-        {activeTab === 'hub' && (
-          <div>
+        {/* Games Grid (Always displayed as main view) */}
+        <div className="games-grid">
+          {(() => {
+            const getGameImage = (game) => {
+              if (game.slug === 'camp-jump') return campJumpImg;
+              if (game.slug === 'duelo-galactico') return spaceOdysseyImg;
+              return game.imageUrl || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=400';
+            };
 
-            {/* Games Grid */}
-            <div className="games-grid">
-              {(() => {
-                const getGameImage = (game) => {
-                  if (game.slug === 'camp-jump') return campJumpImg;
-                  if (game.slug === 'duelo-galactico') return spaceOdysseyImg;
-                  return game.imageUrl || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=400';
-                };
+            const displayGames = [...games];
+            while (displayGames.length < 6) {
+              displayGames.push({
+                id: `soon-${displayGames.length}`,
+                title: 'Em Breve',
+                description: 'Estamos trabalhando em um novo jogo incrível. Fique ligado!',
+                slug: 'coming-soon',
+                isComingSoon: true,
+                imageUrl: emBreveImg
+              });
+            }
 
-                const displayGames = [...games];
-                while (displayGames.length < 6) {
-                  displayGames.push({
-                    id: `soon-${displayGames.length}`,
-                    title: 'Em Breve',
-                    description: 'Estamos trabalhando em um novo jogo incrível. Fique ligado!',
-                    slug: 'coming-soon',
-                    isComingSoon: true,
-                    imageUrl: emBreveImg
-                  });
-                }
+            return displayGames.map((game, index) => {
+              const isComingSoon = game.isComingSoon;
+              const gameImage = getGameImage(game);
+              const cardClass = isComingSoon ? 'game-card coming-soon' : (index === 0 ? 'game-card item-1' : 'game-card coming-soon');
 
-                return displayGames.map((game) => {
-                  const isComingSoon = game.isComingSoon;
-                  const gameImage = getGameImage(game);
-
-                  return (
-                    <article 
-                      key={game.id} 
-                      className={`game-card ${currentGame?.id === game.id ? 'active' : ''} ${isComingSoon ? 'coming-soon' : ''}`}
-                      onClick={() => {
-                        if (isComingSoon) {
-                          setAlert({ type: 'info', message: 'Este jogo estará disponível em breve!' });
-                          return;
-                        }
-                        setCurrentGame(game);
-                        if (gameFrameRef.current && user) {
-                          setTimeout(() => {
-                            gameFrameRef.current.contentWindow?.postMessage({
-                              type: 'NEXUS_AUTH_CONTEXT',
-                              payload: { user, token }
-                            }, '*');
-                          }, 1000);
-                        }
-                      }}
-                      onMouseEnter={() => setHoveredBg(gameImage)}
-                      onMouseLeave={() => setHoveredBg(null)}
-                      style={{ backgroundImage: `url("${gameImage}")` }}
-                    >
-                      <div className="card-content">
-                        <h3>{game.title}</h3>
-                        <div className="tags">
-                          <span>{isComingSoon ? 'Em Breve' : 'Arcade'}</span>
-                          {!isComingSoon && (game.config?.embed ? <span>Embed</span> : <span>Aba Externa</span>)}
-                        </div>
-                      </div>
-                    </article>
-                  );
-                });
-              })()}
-            </div>
-
-            {/* Embedded Player */}
-            {currentGame && (
-              <section ref={playerRef} className="player-dashboard">
-                <div className="player-header">
-                  <div className="player-title">
-                    <h3>Jogando: {currentGame.title}</h3>
-                    <p>SDK integrado. Suas pontuações serão salvas automaticamente.</p>
-                  </div>
-                  <div style={{display: 'flex', gap: '10px'}}>
-                    {currentGame.config?.launchUrl && (
-                      <>
-                        <button 
-                          onClick={handleFullscreen} 
-                          className="btn btn-primary glow-btn"
-                          title="Aumentar a Tela (Tela Cheia)"
-                        >
-                          <Maximize2 size={16} />
-                          Aumentar a Tela
-                        </button>
-                        <a 
-                          href={currentGame.config.launchUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="btn btn-secondary"
-                          onClick={() => {
-                            // Post Auth context in new tab when clicked
-                            setTimeout(() => {
-                              window.open(currentGame.config.launchUrl, '_blank')?.postMessage({
-                                type: 'NEXUS_AUTH_CONTEXT',
-                                payload: { user, token }
-                              }, '*');
-                            }, 500);
-                          }}
-                        >
-                          <Globe size={16} />
-                          Jogar no Google
-                        </a>
-                      </>
-                    )}
-                    <button onClick={() => setCurrentGame(null)} className="btn btn-secondary">
-                      <X size={16} />
-                      Fechar
-                    </button>
-                  </div>
-                </div>
-
-                <div className="player-iframe-wrapper">
-                  {currentGame.config?.launchUrl ? (
-                    <iframe
-                      ref={gameFrameRef}
-                      title={currentGame.title}
-                      src={currentGame.config.launchUrl}
-                      allow="autoplay; fullscreen; clipboard-write"
-                    ></iframe>
-                  ) : (
-                    <div className="empty-state" style={{marginTop: '150px'}}>
-                      <p>Este jogo não possui Launch URL cadastrado para execução.</p>
+              return (
+                <article 
+                  key={game.id} 
+                  className={cardClass}
+                  onClick={() => {
+                    if (isComingSoon) {
+                      setAlert({ type: 'info', message: 'Este jogo estará disponível em breve!' });
+                      return;
+                    }
+                    setCurrentGame(game);
+                    if (gameFrameRef.current && user) {
+                      setTimeout(() => {
+                        gameFrameRef.current.contentWindow?.postMessage({
+                          type: 'NEXUS_AUTH_CONTEXT',
+                          payload: { user, token }
+                        }, '*');
+                      }, 1000);
+                    }
+                  }}
+                  onMouseEnter={() => setHoveredBg(gameImage)}
+                  onMouseLeave={() => setHoveredBg(null)}
+                  style={{ backgroundImage: `url("${gameImage}")` }}
+                >
+                  <div className="card-content">
+                    <h3>{game.title}</h3>
+                    <div className="tags">
+                      <span>{isComingSoon ? 'Em Breve' : (game.config?.category || 'Arcade')}</span>
+                      {!isComingSoon && <span>{game.config?.difficulty || 'Normal'}</span>}
                     </div>
-                  )}
-                </div>
-              </section>
-            )}
-          </div>
-        )}
+                  </div>
+                </article>
+              );
+            });
+          })()}
+        </div>
 
-        {/* LEADERBOARD TAB */}
-        {activeTab === 'leaderboard' && (
-          <section className="leaderboard-container">
-            {/* Classificação Geral */}
-
-            {/* Filter Bar */}
-            <div className="filter-bar">
-              <div className="filter-group">
-                <label htmlFor="filterPeriod">Período</label>
-                <select 
-                  id="filterPeriod"
-                  className="select-input"
-                  value={filterPeriod}
-                  onChange={(e) => setFilterPeriod(e.target.value)}
-                >
-                  <option value="all">Sempre (All Time)</option>
-                  <option value="week">Esta Semana</option>
-                  <option value="day">Hoje</option>
-                </select>
+        {/* Embedded Player */}
+        {currentGame && (
+          <section ref={playerRef} className="player-dashboard">
+            <div className="player-header">
+              <div className="player-title">
+                <h3>Jogando: {currentGame.title}</h3>
+                <p>SDK integrado. Suas pontuações serão salvas automaticamente.</p>
               </div>
-
-              <div className="filter-group">
-                <label htmlFor="filterGame">Filtrar por Jogo</label>
-                <select 
-                  id="filterGame"
-                  className="select-input"
-                  value={filterGameId}
-                  onChange={(e) => setFilterGameId(e.target.value)}
-                >
-                  <option value="">Todos os Jogos</option>
-                  {games.map((g) => (
-                    <option key={g.id} value={g.id}>{g.title}</option>
-                  ))}
-                </select>
+              <div style={{display: 'flex', gap: '10px'}}>
+                {currentGame.config?.launchUrl && (
+                  <>
+                    <button 
+                      onClick={handleFullscreen} 
+                      className="btn btn-primary"
+                      title="Aumentar a Tela (Tela Cheia)"
+                    >
+                      <Maximize2 size={16} />
+                      Aumentar a Tela
+                    </button>
+                    <a 
+                      href={currentGame.config.launchUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="btn btn-secondary"
+                      onClick={() => {
+                        // Post Auth context in new tab when clicked
+                        setTimeout(() => {
+                          window.open(currentGame.config.launchUrl, '_blank')?.postMessage({
+                            type: 'NEXUS_AUTH_CONTEXT',
+                            payload: { user, token }
+                          }, '*');
+                        }, 500);
+                      }}
+                    >
+                      <Globe size={16} />
+                      Jogar em Nova Aba
+                    </a>
+                  </>
+                )}
+                <button onClick={() => setCurrentGame(null)} className="btn btn-secondary">
+                  <X size={16} />
+                  Fechar
+                </button>
               </div>
-
-              <button onClick={loadLeaderboard} className="btn btn-primary" style={{height: '42px'}}>
-                <RefreshCw size={16} />
-                Atualizar
-              </button>
             </div>
 
-            {/* Ranking Table */}
-            <div className="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th style={{width: '80px'}}>Posição</th>
-                    <th>Jogador</th>
-                    <th>E-mail</th>
-                    <th style={{textAlign: 'right'}}>Pontuação Acumulada</th>
-                    <th style={{textAlign: 'right', width: '120px'}}>Partidas</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {leaderboard.length > 0 ? (
-                    leaderboard.map((entry, idx) => (
-                      <tr key={entry.user?.id || idx}>
-                        <td>
-                          <span className={`rank-badge ${entry.rank === 1 ? 'rank-1' : entry.rank === 2 ? 'rank-2' : entry.rank === 3 ? 'rank-3' : 'rank-other'}`}>
-                            {entry.rank}
-                          </span>
-                        </td>
-                        <td style={{fontWeight: 600}}>{entry.user?.name || 'Desconhecido'}</td>
-                        <td style={{color: 'var(--text-muted)'}}>{entry.user?.email || '-'}</td>
-                        <td style={{textAlign: 'right'}} className="score-value">
-                          {entry.totalScore.toLocaleString()} pts
-                        </td>
-                        <td style={{textAlign: 'right', fontWeight: 600}}>{entry.entries}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="5" className="empty-state">
-                        Nenhuma pontuação registrada para o filtro selecionado.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+            <div className="player-iframe-wrapper">
+              {currentGame.config?.launchUrl ? (
+                <iframe
+                  ref={gameFrameRef}
+                  title={currentGame.title}
+                  src={currentGame.config.launchUrl}
+                  allow="autoplay; fullscreen; clipboard-write"
+                ></iframe>
+              ) : (
+                <div className="empty-state" style={{marginTop: '150px'}}>
+                  <p>Este jogo não possui Launch URL cadastrado para execução.</p>
+                </div>
+              )}
             </div>
           </section>
         )}
-
-        {/* GAMES ADMIN TAB */}
-        {activeTab === 'admin' && isAdmin && (
-          <div className="admin-container">
-            {/* Gerenciamento de Catálogo */}
-
-            {/* CRUD Form */}
-            <section className="admin-card">
-              <h2>{isEditingGame ? 'Editar Jogo' : 'Cadastrar Novo Jogo'}</h2>
-              <form onSubmit={handleSaveGame} className="admin-form-grid">
-                <div className="form-group">
-                  <label htmlFor="gameTitle">Título do Jogo</label>
-                  <input 
-                    type="text" 
-                    id="gameTitle" 
-                    className="form-input"
-                    value={adminGameForm.title}
-                    onChange={handleTitleChange}
-                    required
-                    autoComplete="off"
-                    placeholder="Ex: Flappy Bird"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="gameSlug">Slug (Identificador único)</label>
-                  <input 
-                    type="text" 
-                    id="gameSlug" 
-                    className="form-input"
-                    value={adminGameForm.slug}
-                    onChange={(e) => setAdminGameForm({...adminGameForm, slug: e.target.value})}
-                    required
-                    disabled={isEditingGame}
-                    autoComplete="off"
-                    placeholder="Ex: flappy-bird"
-                  />
-                </div>
-
-                <div className="form-group form-full">
-                  <label htmlFor="gameDesc">Descrição</label>
-                  <textarea 
-                    id="gameDesc" 
-                    className="form-input"
-                    style={{minHeight: '80px', resize: 'vertical'}}
-                    value={adminGameForm.description}
-                    onChange={(e) => setAdminGameForm({...adminGameForm, description: e.target.value})}
-                    placeholder="Breve resumo da jogabilidade ou objetivos..."
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="gameImage">URL da Imagem de Capa</label>
-                  <input 
-                    type="url" 
-                    id="gameImage" 
-                    className="form-input"
-                    value={adminGameForm.imageUrl}
-                    onChange={(e) => setAdminGameForm({...adminGameForm, imageUrl: e.target.value})}
-                    placeholder="https://exemplo.com/capa.jpg"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="gameLaunch">Launch URL (Endereço do Jogo no Vercel)</label>
-                  <input 
-                    type="url" 
-                    id="gameLaunch" 
-                    className="form-input"
-                    value={adminGameForm.launchUrl}
-                    onChange={(e) => setAdminGameForm({...adminGameForm, launchUrl: e.target.value})}
-                    placeholder="https://seu-jogo.vercel.app/"
-                  />
-                </div>
-
-                <div className="form-group form-full" style={{flexDirection: 'row', gap: '24px'}}>
-                  <label className="checkbox-group">
-                    <input 
-                      type="checkbox" 
-                      className="checkbox-input"
-                      checked={adminGameForm.embed}
-                      onChange={(e) => setAdminGameForm({...adminGameForm, embed: e.target.checked})}
-                    />
-                    Permitir Rodar em Iframe (Embed)
-                  </label>
-
-                  <label className="checkbox-group">
-                    <input 
-                      type="checkbox" 
-                      className="checkbox-input"
-                      checked={adminGameForm.isActive}
-                      onChange={(e) => setAdminGameForm({...adminGameForm, isActive: e.target.checked})}
-                    />
-                    Ativo
-                  </label>
-                </div>
-
-                <div className="form-full admin-actions">
-                  {isEditingGame && (
-                    <button 
-                      type="button" 
-                      onClick={() => {
-                        setIsEditingGame(false);
-                        setAdminGameForm({
-                          id: null,
-                          slug: '',
-                          title: '',
-                          description: '',
-                          imageUrl: '',
-                          launchUrl: '',
-                          embed: true,
-                          isActive: true
-                        });
-                      }} 
-                      className="btn btn-secondary"
-                    >
-                      Cancelar
-                    </button>
-                  )}
-                  <button type="submit" className="btn btn-primary">
-                    Salvar Jogo
-                  </button>
-                </div>
-              </form>
-            </section>
-
-            {/* List of games */}
-            <section className="admin-card">
-              <h2>Jogos Cadastrados</h2>
-              <div className="table-wrapper">
-                <table>
-                  <thead>
-                    <tr>
-                      <th style={{width: '60px'}}>ID</th>
-                      <th>Título</th>
-                      <th>Slug</th>
-                      <th>URL do Vercel / Servidor</th>
-                      <th>Exibição</th>
-                      <th style={{width: '120px', textAlign: 'right'}}>Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {games.length > 0 ? (
-                      games.map((g) => (
-                        <tr key={g.id}>
-                          <td>{g.id}</td>
-                          <td style={{fontWeight: 600}}>{g.title}</td>
-                          <td><code>{g.slug}</code></td>
-                          <td style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>
-                            {g.config?.launchUrl || 'Nenhum'}
-                          </td>
-                          <td>
-                            <span className="tag">
-                              {g.config?.embed ? 'Iframe (Embed)' : 'Aba Externa'}
-                            </span>
-                          </td>
-                          <td style={{textAlign: 'right'}}>
-                            <div className="actions-cell" style={{justifyContent: 'flex-end'}}>
-                              <button 
-                                onClick={() => handleEditClick(g)}
-                                className="action-btn action-edit"
-                                title="Editar configurações"
-                              >
-                                <Edit3 size={16} />
-                              </button>
-                              <button 
-                                onClick={() => handleDeleteGame(g.id)}
-                                className="action-btn action-delete"
-                                title="Remover jogo"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="6" className="empty-state">Nenhum jogo cadastrado.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          </div>
-        )}
       </main>
 
-      {/* LOGIN POPUP MODAL */}
+      {/* LEADERBOARD DRAWER (SLIDE-OUT PANEL) */}
+      <aside className={`fnx-score-panel ${isScorePanelOpen ? 'is-open' : ''}`}>
+        <div className="fnx-row" style={{ justifyContent: 'space-between', alignItems: 'center', marginTop: 0 }}>
+          <h3 style={{ margin: 0 }}>Leaderboard</h3>
+          <button className="fnx-btn" type="button" onClick={() => setIsScorePanelOpen(false)}>Fechar</button>
+        </div>
+        <div className="fnx-row" style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+          <select 
+            className="fnx-input" 
+            value={filterPeriod} 
+            onChange={(e) => setFilterPeriod(e.target.value)}
+            style={{ flex: 1 }}
+          >
+            <option value="all">Sempre (All Time)</option>
+            <option value="week">Esta Semana</option>
+            <option value="day">Hoje</option>
+          </select>
+          <select
+            className="fnx-input"
+            value={filterGameId}
+            onChange={(e) => setFilterGameId(e.target.value)}
+            style={{ flex: 1 }}
+          >
+            <option value="">Todos os Jogos</option>
+            {games.map((g) => (
+              <option key={g.id} value={g.id}>{g.title}</option>
+            ))}
+          </select>
+        </div>
+        
+        <ul className="fnx-score-list" style={{ marginTop: '15px' }}>
+          {leaderboard.length > 0 ? (
+            leaderboard.map((entry, idx) => (
+              <li key={entry.user?.id || idx} className="fnx-score-item">
+                <span className="fnx-score-rank">#{entry.rank}</span>
+                <span>{entry.user?.name || 'Desconhecido'}</span>
+                <span className="fnx-score-points">{entry.totalScore.toLocaleString()}</span>
+              </li>
+            ))
+          ) : (
+            <li className="fnx-score-item">
+              <span>-</span>
+              <span>Nenhum registro</span>
+              <span>0</span>
+            </li>
+          )}
+        </ul>
+      </aside>
+
+      {/* ADMIN OVERLAY MODALS */}
+      {activeAdminModal && (
+        <div className="fnx-overlay is-open" onClick={(e) => e.target.classList.contains('fnx-overlay') && setActiveAdminModal(null)}>
+          <div className="fnx-modal">
+            {activeAdminModal === 'add' && (
+              <>
+                <h3 style={{ marginBottom: '15px' }}>Adicionar jogo</h3>
+                <form onSubmit={handleSaveGame}>
+                  <div className="form-group">
+                    <label>Slug</label>
+                    <input 
+                      type="text" 
+                      className="fnx-input" 
+                      required 
+                      placeholder="meu-jogo" 
+                      value={adminGameForm.slug}
+                      onChange={(e) => setAdminGameForm({...adminGameForm, slug: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginTop: '10px' }}>
+                    <label>Título</label>
+                    <input 
+                      type="text" 
+                      className="fnx-input" 
+                      required 
+                      placeholder="Meu Jogo" 
+                      value={adminGameForm.title}
+                      onChange={handleTitleChange}
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginTop: '10px' }}>
+                    <label>Descrição</label>
+                    <input 
+                      type="text" 
+                      className="fnx-input" 
+                      placeholder="Descrição curta" 
+                      value={adminGameForm.description}
+                      onChange={(e) => setAdminGameForm({...adminGameForm, description: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginTop: '10px' }}>
+                    <label>Imagem URL</label>
+                    <input 
+                      type="text" 
+                      className="fnx-input" 
+                      placeholder="https://..." 
+                      value={adminGameForm.imageUrl}
+                      onChange={(e) => setAdminGameForm({...adminGameForm, imageUrl: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginTop: '10px' }}>
+                    <label>Launch URL</label>
+                    <input 
+                      type="text" 
+                      className="fnx-input" 
+                      placeholder="https://..." 
+                      value={adminGameForm.launchUrl}
+                      onChange={(e) => setAdminGameForm({...adminGameForm, launchUrl: e.target.value})}
+                    />
+                  </div>
+                  <div className="fnx-row" style={{ marginTop: '15px' }}>
+                    <button type="submit" className="fnx-btn fnx-btn-primary">Salvar</button>
+                    <button type="button" className="fnx-btn" onClick={() => setActiveAdminModal(null)}>Cancelar</button>
+                  </div>
+                </form>
+              </>
+            )}
+
+            {activeAdminModal === 'edit' && (
+              <>
+                <h3 style={{ marginBottom: '10px' }}>Editar jogo</h3>
+                <div className="form-group" style={{ marginBottom: '15px' }}>
+                  <label>Selecione o jogo</label>
+                  <select 
+                    className="fnx-input" 
+                    value={adminGameForm.id || ''}
+                    onChange={(e) => {
+                      const selected = games.find(g => Number(g.id) === Number(e.target.value));
+                      if (selected) {
+                        setIsEditingGame(true);
+                        setAdminGameForm({
+                          id: selected.id,
+                          slug: selected.slug || '',
+                          title: selected.title || '',
+                          description: selected.description || '',
+                          imageUrl: selected.imageUrl || '',
+                          launchUrl: selected.config?.launchUrl || '',
+                          embed: selected.config?.embed ?? true,
+                          isActive: selected.isActive ?? true
+                        });
+                      }
+                    }}
+                  >
+                    <option value="">Selecione...</option>
+                    {games.map((g) => (
+                      <option key={g.id} value={g.id}>{g.title}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                {adminGameForm.id && (
+                  <form onSubmit={handleSaveGame}>
+                    <div className="form-group">
+                      <label>Slug</label>
+                      <input 
+                        type="text" 
+                        className="fnx-input" 
+                        value={adminGameForm.slug} 
+                        disabled 
+                      />
+                    </div>
+                    <div className="form-group" style={{ marginTop: '10px' }}>
+                      <label>Título</label>
+                      <input 
+                        type="text" 
+                        className="fnx-input" 
+                        required 
+                        value={adminGameForm.title}
+                        onChange={(e) => setAdminGameForm({...adminGameForm, title: e.target.value})}
+                      />
+                    </div>
+                    <div className="form-group" style={{ marginTop: '10px' }}>
+                      <label>Descrição</label>
+                      <input 
+                        type="text" 
+                        className="fnx-input" 
+                        value={adminGameForm.description}
+                        onChange={(e) => setAdminGameForm({...adminGameForm, description: e.target.value})}
+                      />
+                    </div>
+                    <div className="form-group" style={{ marginTop: '10px' }}>
+                      <label>Imagem URL</label>
+                      <input 
+                        type="text" 
+                        className="fnx-input" 
+                        value={adminGameForm.imageUrl}
+                        onChange={(e) => setAdminGameForm({...adminGameForm, imageUrl: e.target.value})}
+                      />
+                    </div>
+                    <div className="form-group" style={{ marginTop: '10px' }}>
+                      <label>Launch URL</label>
+                      <input 
+                        type="text" 
+                        className="fnx-input" 
+                        value={adminGameForm.launchUrl}
+                        onChange={(e) => setAdminGameForm({...adminGameForm, launchUrl: e.target.value})}
+                      />
+                    </div>
+                    <div className="fnx-row" style={{ marginTop: '15px' }}>
+                      <button type="submit" className="fnx-btn fnx-btn-primary">Salvar alterações</button>
+                      <button type="button" className="fnx-btn" onClick={() => setActiveAdminModal(null)}>Cancelar</button>
+                    </div>
+                  </form>
+                )}
+              </>
+            )}
+
+            {activeAdminModal === 'delete' && (
+              <>
+                <h3 style={{ marginBottom: '10px' }}>Remover jogo</h3>
+                <p style={{ opacity: 0.9, margin: 0, marginBottom: '15px' }}>Selecione um jogo cadastrado para remover.</p>
+                <ul className="fnx-list">
+                  {games.length > 0 ? (
+                    games.map((g) => (
+                      <li key={g.id} className="fnx-list-item">
+                        <span>{g.title}</span>
+                        <button 
+                          type="button" 
+                          className="fnx-btn" 
+                          style={{ background: 'var(--color-danger)', borderColor: 'transparent' }}
+                          onClick={() => handleDeleteGame(g.id)}
+                        >
+                          Remover
+                        </button>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="fnx-list-item">
+                      <span>Nenhum jogo ativo para remover.</span>
+                    </li>
+                  )}
+                </ul>
+                <div className="fnx-row" style={{ marginTop: '15px' }}>
+                  <button type="button" className="fnx-btn" onClick={() => setActiveAdminModal(null)}>Fechar</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* LOGIN POPUP MODAL (styled as boilerplate fnx-modal) */}
       {showLoginModal && (
-        <div className="auth-container" style={{position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)'}}>
-          <div className="login-card">
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
-              <h2>Entrar no Nexus</h2>
+        <div className="fnx-overlay is-open" onClick={(e) => e.target.classList.contains('fnx-overlay') && setShowLoginModal(false)}>
+          <div className="fnx-modal">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ margin: 0 }}>Entrar no Nexus</h3>
               <button 
                 onClick={() => setShowLoginModal(false)}
-                style={{background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer'}}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
               >
                 <X size={20} />
               </button>
@@ -956,11 +954,10 @@ function App() {
             
             <form onSubmit={handleLoginSubmit}>
               <div className="form-group">
-                <label htmlFor="loginEmail">E-mail</label>
+                <label>E-mail</label>
                 <input 
                   type="email" 
-                  id="loginEmail" 
-                  className="form-input"
+                  className="fnx-input"
                   value={loginForm.email}
                   onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
                   required
@@ -968,12 +965,11 @@ function App() {
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="loginPassword">Senha</label>
+              <div className="form-group" style={{ marginTop: '10px' }}>
+                <label>Senha</label>
                 <input 
                   type="password" 
-                  id="loginPassword" 
-                  className="form-input"
+                  className="fnx-input"
                   value={loginForm.password}
                   onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
                   required
@@ -981,7 +977,7 @@ function App() {
                 />
               </div>
 
-              <button type="submit" className="btn btn-primary" style={{width: '100%', marginTop: '10px'}}>
+              <button type="submit" className="fnx-btn fnx-btn-primary" style={{ width: '100%', marginTop: '15px' }}>
                 Entrar
               </button>
             </form>

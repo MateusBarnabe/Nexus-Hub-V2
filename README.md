@@ -350,15 +350,6 @@ Verificar logs em:
 docker-compose logs -f app
 ```
 
-## 🔐 Segurança (Futuro)
-
-- [ ] Implementar JWT para autenticação
-- [ ] Hash de senha com BCrypt
-- [ ] Validação de entrada robusta
-- [ ] Rate limiting
-- [ ] CORS adequado
-- [ ] HTTPS em produção
-
 ## 📝 Dependências Principais
 
 ```xml
@@ -385,7 +376,7 @@ Nexus Score Team
 
 ---
 
-**Versão**: 1.0.0  
+**Versão**: 2.0.1  
 **Data**: 2024-06-01  
 **Status**: Em Desenvolvimento
 

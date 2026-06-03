@@ -1,0 +1,65 @@
+spring:
+  application:
+    name: nexus-score
+
+  # Configuração do DataSource (PostgreSQL)
+  datasource:
+    url: jdbc:postgresql://db:5432/nexus_db
+    username: admin
+    password: admin
+    driver-class-name: org.postgresql.Driver
+
+  # Configuração do JPA/Hibernate
+  jpa:
+    hibernate:
+      ddl-auto: update  # create-drop para desenvolvimento, validate para produção
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+    show-sql: false  # Mudar para true apenas para debug
+
+  # Configuração do RabbitMQ
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+
+  # Configuração do WebSocket (implícita, mas aqui para referência)
+  websocket:
+    message-broker:
+      enabled: true
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+logging:
+  level:
+    root: INFO
+    com.example.nexus: DEBUG
+    org.springframework.amqp: DEBUG
+    org.springframework.web.socket: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Configurações específicas da aplicação
+app:
+  name: Nexus Score
+  version: 1.0.0
+  description: Hub de Jogos com Placar em Tempo Real
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+

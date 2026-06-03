@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nexus Score | Front</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Sora:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-bg" aria-hidden="true"></div>
+    <main class="layout">
+      <header class="hero">
+        <p class="eyebrow">Projeto Integrador</p>
+        <h1>Nexus Hub</h1>
+      </header>
+
+      <section class="panel auth-panel">
+        <div class="panel-title-wrap">
+          <h2>Sessao</h2>
+          <span id="sessionBadge" class="badge">Desconectado</span>
+        </div>
+
+        <form id="loginForm" class="row form-grid">
+          <label>
+            Email
+            <input type="email" id="email" required placeholder="admin@example.com" />
+          </label>
+          <label>
+            Senha
+            <input type="password" id="password" required placeholder="password1" />
+          </label>
+          <button type="submit" class="btn btn-accent">Entrar</button>
+          <button type="button" id="logoutBtn" class="btn btn-ghost">Sair</button>
+        </form>
+
+        <p class="hint">Seed padrao: admin@example.com / password1</p>
+      </section>
+
+      <section class="tabs-wrap">
+        <nav class="tabs" role="tablist" aria-label="Navegacao do painel">
+          <button class="tab" role="tab" data-tab="hub" aria-selected="false">Hub</button>
+          <button class="tab is-active" role="tab" data-tab="leaderboard" aria-selected="true">Leaderboard</button>
+          <button class="tab" role="tab" data-tab="games" aria-selected="false">Games (Admin)</button>
+        </nav>
+
+        <article class="tab-panel" data-panel="hub">
+          <section class="panel">
+            <div class="panel-title-wrap">
+              <h2>Hub de Jogos</h2>
+            </div>
+
+            <div class="hub-layout">
+              <div>
+                <p class="hint">Selecione um jogo ativo para abrir no player.</p>
+                <div id="hubGamesGrid" class="hub-grid"></div>
+              </div>
+
+              <div class="player-shell">
+                <h3 id="currentGameTitle">Nenhum jogo selecionado</h3>
+                <p id="currentGameMeta" class="hint">Cadastre launchUrl no game para habilitar.</p>
+                <iframe id="gameFrame" title="Game Player" class="game-frame" src="about:blank"></iframe>
+                <div class="row player-actions">
+                  <button id="openGameExternal" type="button" class="btn btn-ghost" disabled>Abrir em nova aba</button>
+                </div>
+                <p class="hint">SDK para jogos: <code>&lt;script src="/nexus-game-sdk.js"&gt;&lt;/script&gt;</code></p>
+              </div>
+            </div>
+          </section>
+        </article>
+
+        <article class="tab-panel is-active" data-panel="leaderboard">
+          <section class="panel">
+            <div class="panel-title-wrap">
+              <h2>Ranking</h2>
+            </div>
+
+            <div class="row filters">
+              <label>
+                Periodo
+                <select id="period">
+                  <option value="all">All time</option>
+                  <option value="week">Semana</option>
+                  <option value="day">Hoje</option>
+                </select>
+              </label>
+              <label>
+                Game
+                <select id="leaderboardGameId">
+                  <option value="">Todos</option>
+                </select>
+              </label>
+              <button id="refreshLeaderboard" class="btn btn-accent" type="button">Atualizar</button>
+            </div>
+
+            <div class="table-shell">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Jogador</th>
+                    <th>Pontos</th>
+                    <th>Partidas</th>
+                  </tr>
+                </thead>
+                <tbody id="leaderboardBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </article>
+
+        <article class="tab-panel" data-panel="games">
+          <section class="panel">
+            <div class="panel-title-wrap">
+              <h2>Catalogo de Games</h2>
+              <button id="refreshGames" class="btn btn-ghost" type="button">Recarregar</button>
+            </div>
+
+            <form id="gameForm" class="row form-grid game-form">
+              <input type="hidden" id="gameId" />
+              <label>
+                Slug
+                <input id="gameSlug" required placeholder="flappy-bird" />
+              </label>
+              <label>
+                Titulo
+                <input id="gameTitle" required placeholder="Flappy Bird" />
+              </label>
+              <label class="full">
+                Descricao
+                <input id="gameDescription" placeholder="Descricao curta do jogo" />
+              </label>
+              <label>
+                Imagem URL
+                <input id="gameImageUrl" placeholder="https://..." />
+              </label>
+              <label class="full">
+                Launch URL
+                <input id="gameLaunchUrl" placeholder="https://games.seusite.com/meu-jogo/" />
+              </label>
+              <label class="inline-check">
+                <input id="gameEmbed" type="checkbox" checked />
+                Permitir embed no hub
+              </label>
+              <label class="inline-check">
+                <input id="gameIsActive" type="checkbox" checked />
+                Ativo
+              </label>
+              <button class="btn btn-accent" type="submit">Salvar</button>
+              <button id="cancelEdit" class="btn btn-ghost" type="button">Cancelar</button>
+            </form>
+
+            <div class="table-shell">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Slug</th>
+                    <th>Titulo</th>
+                    <th>Status</th>
+                    <th>Acoes</th>
+                  </tr>
+                </thead>
+                <tbody id="gamesBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </article>
+      </section>
+
+      <footer class="status-bar">
+        <p id="statusText">Front inicial pronto para evolucao.</p>
+      </footer>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

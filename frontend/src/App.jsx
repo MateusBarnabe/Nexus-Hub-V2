@@ -515,21 +515,21 @@ function App() {
           {isAdmin && (
             <>
               <button 
-                className={`nav-item ${activeAdminModal === 'add' ? 'active' : ''}`}
+                className={`fnx-admin-link ${activeAdminModal === 'add' ? 'active' : ''}`}
                 onClick={() => { setActiveAdminModal('add'); setIsScorePanelOpen(false); }}
                 title="Adicionar Jogo"
               >
                 <PlusSquare size={24} />
               </button>
               <button 
-                className={`nav-item ${activeAdminModal === 'edit' ? 'active' : ''}`}
+                className={`fnx-admin-link ${activeAdminModal === 'edit' ? 'active' : ''}`}
                 onClick={() => { setActiveAdminModal('edit'); setIsScorePanelOpen(false); }}
                 title="Editar Jogo"
               >
                 <Edit3 size={24} />
               </button>
               <button 
-                className={`nav-item ${activeAdminModal === 'delete' ? 'active' : ''}`}
+                className={`fnx-admin-link ${activeAdminModal === 'delete' ? 'active' : ''}`}
                 onClick={() => { setActiveAdminModal('delete'); setIsScorePanelOpen(false); }}
                 title="Remover Jogo"
               >

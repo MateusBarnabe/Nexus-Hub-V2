@@ -451,102 +451,84 @@ function App() {
 
   return (
     <div className="app-layout">
-      <div className="bg-gradient-mesh"></div>
-      <div className={`hub-hover-bg ${hoveredBg ? 'active' : ''}`} style={{ backgroundImage: hoveredBg ? `url("${hoveredBg}")` : 'none' }}></div>
+      {/* Background Layers */}
+      <div className="bg-layer bg-default" style={{ opacity: hoveredBg ? 0 : 1 }}></div>
+      <div className={`bg-layer bg-active`} style={{ backgroundImage: hoveredBg ? `url("${hoveredBg}")` : 'none', opacity: hoveredBg ? 1 : 0 }}></div>
       
-      {/* MOBILE HEADER */}
-      <header className="mobile-header">
-        <button className="menu-toggle-btn" onClick={() => setMobileMenuOpen(true)}>
-          <Menu size={24} />
-        </button>
-        <div className="mobile-logo">
-          <Gamepad2 className="logo-icon" size={20} />
-          <span className="logo-text">Nexus Hub</span>
-        </div>
-        
-        {/* Mini profile widget on mobile top-right */}
-        <div className="mobile-profile-widget">
-          {user ? (
-            <button onClick={handleLogout} className="btn btn-secondary btn-xs" title="Sair">
-              <LogOut size={14} />
-            </button>
-          ) : (
-            <button onClick={() => setShowLoginModal(true)} className="btn btn-primary btn-xs">
-              <LogIn size={14} />
-              Entrar
-            </button>
-          )}
-        </div>
-      </header>
-
-      {/* SIDEBAR BACKDROP */}
-      {mobileMenuOpen && (
-        <div className="sidebar-backdrop" onClick={() => setMobileMenuOpen(false)}></div>
-      )}
-
       {/* SIDEBAR NAVIGATION */}
-      <aside className={`sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
-        <div className="logo-container">
-          <Gamepad2 className="logo-icon" />
-          <span className="logo-text">Nexus Hub</span>
-          <button className="sidebar-close-btn" onClick={() => setMobileMenuOpen(false)}>
-            <X size={20} />
-          </button>
+      <aside className="sidebar">
+        <div className="logo-icon">
+          <Gamepad2 size={32} />
         </div>
 
-        <nav className="nav-menu">
+        <nav className="nav-links">
           <button 
             className={`nav-item ${activeTab === 'hub' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('hub'); setMobileMenuOpen(false); }}
+            onClick={() => setActiveTab('hub')}
+            title="Hub de Jogos"
           >
-            <Home size={18} />
-            Hub de Jogos
+            <Home size={24} />
           </button>
           
           <button 
             className={`nav-item ${activeTab === 'leaderboard' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('leaderboard'); setMobileMenuOpen(false); }}
+            onClick={() => setActiveTab('leaderboard')}
+            title="Classificação"
           >
-            <Trophy size={18} />
-            Leaderboard
+            <Trophy size={24} />
           </button>
 
           {isAdmin && (
             <button 
               className={`nav-item ${activeTab === 'admin' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('admin'); setMobileMenuOpen(false); }}
+              onClick={() => setActiveTab('admin')}
+              title="Administração"
             >
-              <Settings size={18} />
-              Games (Admin)
+              <Settings size={24} />
             </button>
           )}
         </nav>
-
       </aside>
 
       {/* MAIN CONTENT AREA */}
-      <main className="main-content">
+      <main className="content">
         
-        {/* Top Profile / Login Widget */}
-        <div className="top-profile-widget">
-          {user ? (
-            <div className="profile-badge">
-              <div className="profile-info">
-                <span className="profile-name">{user.name}</span>
-                <span className="profile-role">{user.role}</span>
+        {/* Dynamic header matching boilerplate top-bar */}
+        <header className="top-bar">
+          <div className="brand">
+            {activeTab === 'hub' && (
+              <>
+                <h1>Nexus Hub</h1>
+                <p>JOGOS DISPONÍVEIS</p>
+              </>
+            )}
+            {activeTab === 'leaderboard' && (
+              <>
+                <h1>Nexus Classificação</h1>
+                <p>RANKING EM TEMPO REAL</p>
+              </>
+            )}
+            {activeTab === 'admin' && (
+              <>
+                <h1>Nexus Admin</h1>
+                <p>GERENCIAMENTO DE CATÁLOGO</p>
+              </>
+            )}
+          </div>
+          
+          <div className="user-profile" onClick={() => !user && setShowLoginModal(true)}>
+            {user ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span>Bem-vindo de volta, <strong>{user.name}</strong>!</span>
+                <button onClick={(e) => { e.stopPropagation(); handleLogout(); }} className="btn-logout" style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
+                  [Sair]
+                </button>
               </div>
-              <button onClick={handleLogout} className="btn btn-secondary btn-sm">
-                <LogOut size={14} />
-                Sair
-              </button>
-            </div>
-          ) : (
-            <button onClick={() => setShowLoginModal(true)} className="btn btn-primary glow-btn btn-sm">
-              <LogIn size={14} />
-              Entrar
-            </button>
-          )}
-        </div>
+            ) : (
+              <span>Entrar no Nexus</span>
+            )}
+          </div>
+        </header>
 
         {/* Alerts and feedbacks */}
         {alert.message && (
@@ -559,16 +541,6 @@ function App() {
         {/* HUB TAB */}
         {activeTab === 'hub' && (
           <div>
-            <div className="header-bar">
-              <div className="header-title">
-                <h1>Hub de Jogos</h1>
-                <p>Selecione um jogo do catálogo e comece a pontuar no ranking!</p>
-              </div>
-              {/*<button onClick={loadGames} className="btn btn-secondary" disabled={loading}>*/}
-              {/*  <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />*/}
-              {/*  Recarregar*/}
-              {/*</button>*/}
-            </div>
 
             {/* Games Grid */}
             <div className="games-grid">
@@ -699,12 +671,7 @@ function App() {
         {/* LEADERBOARD TAB */}
         {activeTab === 'leaderboard' && (
           <section className="leaderboard-container">
-            <div className="header-bar">
-              <div className="header-title">
-                <h1>Classificação Geral</h1>
-                <p>Veja os melhores jogadores da plataforma por período e jogo!</p>
-              </div>
-            </div>
+            {/* Classificação Geral */}
 
             {/* Filter Bar */}
             <div className="filter-bar">
@@ -788,12 +755,7 @@ function App() {
         {/* GAMES ADMIN TAB */}
         {activeTab === 'admin' && isAdmin && (
           <div className="admin-container">
-            <div className="header-bar">
-              <div className="header-title">
-                <h1>Gerenciamento de Catálogo</h1>
-                <p>Adicione, modifique e organize os jogos exibidos no Hub.</p>
-              </div>
-            </div>
+            {/* Gerenciamento de Catálogo */}
 
             {/* CRUD Form */}
             <section className="admin-card">

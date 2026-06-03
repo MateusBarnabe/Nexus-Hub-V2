@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Hub - Jogos</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="main-container">
+    
+    <aside class="sidebar">
+        <div class="logo-icon"><i class="fas fa-gamepad"></i></div>
+        <nav class="nav-links">
+            <a href="#" class="active"><i class="fas fa-home"></i></a>
+            <a href="#"><i class="fas fa-heart"></i></a>
+            <div class="notif-wrapper">
+                <a href="#"><i class="fas fa-comment"></i></a>
+                <span class="badge"></span>
+            </div>
+        </nav>
+    </aside>
+
+    <main class="content">
+        <header class="top-bar">
+            <div class="brand">
+                <h1>Nexus Hub</h1>
+                <p>JOGOS DISPONÍVEIS</p>
+            </div>
+            <div class="user-profile" onclick="openLoginPopup()">
+                <span>Bem vindo de volta, João!</span>
+            </div>
+        </header>
+
+        <section class="games-grid">
+            <article class="game-card item-1" tabindex="0">
+                <div class="card-content">
+                    <h3>Camp Jump</h3>
+                    <div class="tags">
+                        <span>Aventura</span>
+                        <span>Estratégia</span>
+                        <span>Agilidade</span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="game-card coming-soon item-2">
+                <div class="card-content">
+                    <h3>Em Breve</h3>
+                    <div class="tags">
+                        <span>Adventure</span>
+                        <span>Puzzle</span>
+                        <span>Horror</span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="game-card coming-soon item-3">
+                <div class="card-content">
+                    <h3>Em Breve</h3>
+                    <div class="tags">
+                        <span>Adventure</span>
+                        <span>Puzzle</span>
+                        <span>Horror</span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="game-card coming-soon item-4">
+                <div class="card-content">
+                    <h3>Em Breve</h3>
+                    <div class="tags">
+                        <span>Adventure</span>
+                        <span>Puzzle</span>
+                        <span>Horror</span>
+                    </div>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <div class="bg-layer bg-default"></div>
+    <div class="bg-layer bg-camp-jump"></div>
+    <div class="bg-layer bg-soon"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

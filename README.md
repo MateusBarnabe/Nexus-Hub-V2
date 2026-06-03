@@ -4,6 +4,10 @@
 
 Nexus Score é uma plataforma robusta de Hub de Jogos que utiliza **Spring Boot**, **PostgreSQL**, **RabbitMQ** e **WebSockets** para oferecer uma experiência de jogo interativa com placar em tempo real.
 
+## 💻 Figma
+
+https://www.figma.com/design/8PHmGo9wimaVHaC0wSJNsD/Projeto-NexusHub?node-id=0-1&p=f&t=g7SMsoBRsmNcEZsm-0
+
 ## 🏗️ Arquitetura
 
 ### Padrões Arquiteturais

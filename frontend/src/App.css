@@ -87,42 +87,7 @@
 .nav-item.active {
     background: rgba(255, 255, 255, 0.05);
     color: var(--accent-blue);
-
-.notif-wrapper {
-    position: relative;
 }
-
-.badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: red;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-}
-
-.fnx-admin-link {
-    color: #ffde8a !important;
-    font-size: 1.5rem;
-    text-decoration: none;
-    transition: 0.3s;
-    background: none;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-}
-
-.fnx-admin-link:hover, .fnx-admin-link.active {
-    color: #fff4cc !important;
-    background: rgba(255, 255, 255, 0.05);
-}
-
 
 /* Main Content Area */
 .content {

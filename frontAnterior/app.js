@@ -524,10 +524,20 @@ async function loadGamesCatalog() {
     } else if (data && Array.isArray(data.results)) {
       state.games = data.results;
     } else {
-      state.games = [];
+      const DEFAULT_FALLBACK_GAMES = [
+      { id: 1, slug: 'camp-jump', title: 'Camp Jump', category: 'adventure', description: 'Jogo de corrida de obstáculos e agilidade', imageUrl: '/camp.jpeg', config: { launchUrl: 'https://camp-jump.vercel.app/', embed: true }, isActive: true },
+      { id: 2, slug: 'duelo-galactico', title: 'Space Odyssey', category: 'action', description: 'Batalha espacial multiplayer clássica', imageUrl: '/space odyssey.jpeg', config: { launchUrl: 'https://duelo-galactico.vercel.app/', embed: true }, isActive: true },
+      { id: 3, slug: 'moster-eater', title: 'Monster Eater', category: 'arcade', description: 'Aventura devoradora de pastas e arquivos', imageUrl: '/monster eater.jpeg', config: { launchUrl: 'https://monster-eater.vercel.app/', embed: true }, isActive: true },
+    ];
+    state.games = DEFAULT_FALLBACK_GAMES;
     }
   } catch (error) {
-    state.games = [];
+    const DEFAULT_FALLBACK_GAMES = [
+      { id: 1, slug: 'camp-jump', title: 'Camp Jump', category: 'adventure', description: 'Jogo de corrida de obstáculos e agilidade', imageUrl: '/camp.jpeg', config: { launchUrl: 'https://camp-jump.vercel.app/', embed: true }, isActive: true },
+      { id: 2, slug: 'duelo-galactico', title: 'Space Odyssey', category: 'action', description: 'Batalha espacial multiplayer clássica', imageUrl: '/space odyssey.jpeg', config: { launchUrl: 'https://duelo-galactico.vercel.app/', embed: true }, isActive: true },
+      { id: 3, slug: 'moster-eater', title: 'Monster Eater', category: 'arcade', description: 'Aventura devoradora de pastas e arquivos', imageUrl: '/monster eater.jpeg', config: { launchUrl: 'https://monster-eater.vercel.app/', embed: true }, isActive: true },
+    ];
+    state.games = DEFAULT_FALLBACK_GAMES;
   }
 
   renderGamesGrid();

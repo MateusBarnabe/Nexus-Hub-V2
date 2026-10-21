@@ -1,8 +1,8 @@
-# Nexus Score - Hub de Jogos com Placar em Tempo Real
+# Nexus Hub - Hub de Jogos com Placar em Tempo Real
 
 ## 📋 Visão Geral
 
-Nexus Score é uma plataforma robusta de Hub de Jogos que utiliza **Spring Boot**, **PostgreSQL**, **RabbitMQ** e **WebSockets** para oferecer uma experiência de jogo interativa com placar em tempo real.
+Nexus Hub é uma plataforma robusta de Hub de Jogos que utiliza **Spring Boot**, **PostgreSQL**, **RabbitMQ** e **WebSockets** para oferecer uma experiência de jogo interativa com placar em tempo real.
 
 ## 💻 Figma
 

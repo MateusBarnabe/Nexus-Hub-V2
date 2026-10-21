@@ -119,6 +119,14 @@ public class ScoreService {
     }
 
     /**
+     * Listener fantasma para capturar mensagens e demonstrar na apresentação
+     */
+    @RabbitListener(queues = "nexus.presentation.queue")
+    public void consumePresentationMessage(String message) {
+        log.info("📢 [APRESENTAÇÃO - MENSAGERIA] Mensagem fantasma recebida no backend: {}", message);
+    }
+
+    /**
      * Envia atualização de standings via WebSocket para todos os clientes conectados
      * 
      * @param score Score que foi registrado

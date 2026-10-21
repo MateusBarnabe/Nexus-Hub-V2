@@ -28,11 +28,14 @@ public class DatabaseSeeder implements CommandLineRunner {
         log.info("Executando Database Seeder para inicializar jogos e usuários...");
 
         // 1. Inicializar Jogos
-        seedGame("duelo-galactico", "Duelo Galático", "Batalha espacial multiplayer clássica", 
-                 "https://duelo-galactico.vercel.app/", "https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?q=80&w=400", "action");
+        seedGame("duelo-galactico", "Space Odyssey", "Batalha espacial multiplayer clássica", 
+                 "https://duelo-galactico.vercel.app/", "/space odyssey.jpeg", "action");
 
         seedGame("camp-jump", "Camp Jump", "Jogo de corrida de obstáculos e agilidade", 
-                 "https://camp-jump.vercel.app/", "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=400", "adventure");
+                 "https://camp-jump.vercel.app/", "/camp.jpeg", "adventure");
+
+        seedGame("moster-eater", "Monster Eater", "Aventura devoradora de pastas e arquivos", 
+                 "https://monster-eater.vercel.app/", "/monster eater.jpeg", "arcade");
 
         // 2. Inicializar Usuários de Teste (compatíveis com o DTO do login)
         seedUser("admin@example.com", "Administrador", "password1", Role.ADMIN);
@@ -65,15 +68,21 @@ public class DatabaseSeeder implements CommandLineRunner {
     }
 
     private void seedUser(String email, String name, String password, Role role) {
-        if (!userRepository.existsByEmail(email)) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
             User user = User.builder()
                     .email(email)
                     .name(name)
-                    .password(password) // usando a senha padrão solicitada
+                    .password(password)
                     .role(role)
                     .build();
             userRepository.save(user);
             log.info("Usuário de teste '{}' ({}) cadastrado com sucesso!", name, role);
+        } else {
+            User user = userOpt.get();
+            user.setPassword(password);
+            user.setRole(role);
+            userRepository.save(user);
         }
     }
 }

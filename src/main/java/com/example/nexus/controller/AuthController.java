@@ -27,17 +27,20 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
+        if (request.getEmail() == null || request.getPassword() == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "E-mail e senha são obrigatórios."));
+        }
+
+        Optional<User> userOpt = userRepository.findByEmail(request.getEmail().trim());
         if (userOpt.isEmpty()) {
-            // Caso de fallback para o admin padrao se o banco estiver vazio
-            if ("admin@nexus.local".equals(request.getEmail()) || "admin@example.com".equals(request.getEmail())) {
-                return ResponseEntity.ok(createMockResponse(999L, "Administrador", request.getEmail(), "admin"));
-            }
-            return ResponseEntity.status(401).body(Map.of("message", "Usuário não encontrado com o e-mail: " + request.getEmail()));
+            return ResponseEntity.status(401).body(Map.of("message", "Credenciais inválidas."));
         }
 
         User user = userOpt.get();
-        // Para desenvolvimento, aceita a senha se for compativel ou texto plano
+        if (!request.getPassword().equals(user.getPassword())) {
+            return ResponseEntity.status(401).body(Map.of("message", "Credenciais inválidas."));
+        }
+
         String roleStr = user.getRole() != null ? user.getRole().name().toLowerCase() : "user";
         return ResponseEntity.ok(createMockResponse(user.getId(), user.getName(), user.getEmail(), roleStr));
     }
@@ -52,7 +55,8 @@ public class AuthController {
         
         Map<String, Object> tokens = new HashMap<>();
         Map<String, Object> access = new HashMap<>();
-        access.put("token", "mock-access-token-" + id);
+        String tokenPrefix = "admin".equalsIgnoreCase(role) ? "mock-access-token-admin-" : "mock-access-token-";
+        access.put("token", tokenPrefix + id);
         Map<String, Object> refresh = new HashMap<>();
         refresh.put("token", "mock-refresh-token-" + id);
         

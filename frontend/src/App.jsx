@@ -21,7 +21,8 @@ import './App.css';
 import { Client } from '@stomp/stompjs';
 
 // Import local assets
-import campJumpImg from './assets/camp jump.jpeg';
+import campJumpImg from './assets/camp.jpeg';
+import monsterEaterImg from './assets/monster eater.jpeg';
 import spaceOdysseyImg from './assets/space odyssey.jpeg';
 import emBreveImg from './assets/Em breve.jpeg';
 
@@ -546,9 +547,12 @@ function App() {
             <div className="games-grid">
               {(() => {
                 const getGameImage = (game) => {
-                  if (game.slug === 'camp-jump') return campJumpImg;
-                  if (game.slug === 'duelo-galactico') return spaceOdysseyImg;
-                  return game.imageUrl || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=400';
+                  const slug = (game.slug || '').toLowerCase();
+                  const title = (game.title || '').toLowerCase();
+                  if (slug.includes('camp') || title.includes('camp')) return campJumpImg;
+                  if (slug.includes('duelo') || slug.includes('space') || title.includes('space') || title.includes('duelo')) return spaceOdysseyImg;
+                  if (slug.includes('monster') || slug.includes('moster') || title.includes('monster') || title.includes('moster')) return monsterEaterImg;
+                  return game.imageUrl || campJumpImg;
                 };
 
                 const displayGames = [...games];
@@ -964,7 +968,7 @@ function App() {
                   value={loginForm.email}
                   onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
                   required
-                  placeholder="admin@example.com"
+                  placeholder="usuário"
                 />
               </div>
 
@@ -985,11 +989,6 @@ function App() {
                 Entrar
               </button>
             </form>
-
-            <p className="login-seed-hint">
-              <strong>Seed Padrão:</strong><br />
-              Admin: <code>admin@example.com</code> / <code>password1</code>
-            </p>
           </div>
         </div>
       )}

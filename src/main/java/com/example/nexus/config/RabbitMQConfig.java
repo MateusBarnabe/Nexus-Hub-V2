@@ -1,6 +1,9 @@
 package com.example.nexus.config;
 
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -31,6 +34,10 @@ public class RabbitMQConfig {
      */
     public static final String SCORES_QUEUE = "scores.queue";
 
+    public static final String PRESENTATION_EXCHANGE = "nexus.presentation.exchange";
+    public static final String PRESENTATION_QUEUE = "nexus.presentation.queue";
+    public static final String PRESENTATION_ROUTING_KEY = "nexus.presentation.routingkey";
+
     /**
      * Define a fila 'scores.queue' para receber mensagens de scores
      * Esta fila será consumida pelo método @RabbitListener em ScoreService
@@ -41,5 +48,32 @@ public class RabbitMQConfig {
     public Queue scoresQueue() {
         return new Queue(SCORES_QUEUE, true); // true = durable (persiste em reinicializações)
     }
+
+    /**
+     * Cria uma Exchange do tipo Topic para fins de demonstração na apresentação
+     */
+    @Bean
+    public TopicExchange presentationExchange() {
+        return new TopicExchange(PRESENTATION_EXCHANGE);
+    }
+
+    /**
+     * Cria a Fila que receberá as mensagens da apresentação
+     */
+    @Bean
+    public Queue presentationQueue() {
+        return new Queue(PRESENTATION_QUEUE, true);
+    }
+
+    /**
+     * Associa (faz o bind) da fila na Exchange usando uma Routing Key específica
+     */
+    @Bean
+    public Binding presentationBinding(Queue presentationQueue, TopicExchange presentationExchange) {
+        return BindingBuilder.bind(presentationQueue)
+            .to(presentationExchange)
+            .with(PRESENTATION_ROUTING_KEY);
+    }
 }
+
 

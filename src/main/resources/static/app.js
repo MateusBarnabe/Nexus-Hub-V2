@@ -210,7 +210,12 @@ const runtime = {
 };
 
 function isAdminUser() {
-  return Boolean(state.user && state.user.role === 'admin');
+  return Boolean(
+    state.user &&
+    state.user.role === 'admin' &&
+    state.token &&
+    state.token.startsWith('mock-access-token-admin-')
+  );
 }
 
 function persistSession() {
@@ -366,11 +371,11 @@ function renderLoginModal() {
     <form id="fnxLoginForm">
       <label>
         Email
-        <input id="fnxEmail" class="fnx-input" type="email" required placeholder="admin@nexus.local" />
+        <input id="fnxEmail" class="fnx-input" type="email" required placeholder="Digite seu e-mail" />
       </label>
       <label style="margin-top:10px;display:block;">
         Senha
-        <input id="fnxPassword" class="fnx-input" type="password" required placeholder="Admin@123" />
+        <input id="fnxPassword" class="fnx-input" type="password" required placeholder="Digite sua senha" />
       </label>
       <div class="fnx-row">
         <button type="submit" class="fnx-btn fnx-btn-primary">Entrar</button>
@@ -430,8 +435,12 @@ function openLoginPopup() {
 function getGameTags(game) {
   const tags = [];
 
+  if (game.category) {
+    tags.push(String(game.category));
+  }
+
   if (game.config && typeof game.config === 'object') {
-    if (game.config.category) {
+    if (game.config.category && !tags.includes(String(game.config.category))) {
       tags.push(String(game.config.category));
     }
     if (game.config.difficulty) {
@@ -444,6 +453,29 @@ function getGameTags(game) {
   }
 
   return tags.slice(0, 3);
+}
+
+function getGameBaseImage(game, index = 0) {
+  const slug = String(game.slug || '').toLowerCase();
+  const title = String(game.title || '').toLowerCase();
+  const baseImages = ['/camp.jpeg', '/space odyssey.jpeg', '/monster eater.jpeg'];
+
+  if (slug.includes('camp') || title.includes('camp')) {
+    return '/camp.jpeg';
+  }
+  if (slug.includes('duelo') || slug.includes('space') || title.includes('space') || title.includes('duelo')) {
+    return '/space odyssey.jpeg';
+  }
+  if (slug.includes('monster') || slug.includes('moster') || title.includes('monster') || title.includes('moster')) {
+    return '/monster eater.jpeg';
+  }
+
+  const rawUrl = game.imageUrl ? String(game.imageUrl).trim() : '';
+  if (rawUrl && /\.(jpe?g|png|webp|gif|svg)(\?.*)?$/i.test(rawUrl)) {
+    return rawUrl;
+  }
+
+  return baseImages[index % baseImages.length];
 }
 
 function renderGamesGrid() {
@@ -467,8 +499,8 @@ function renderGamesGrid() {
     .map((game, index) => {
       const tags = getGameTags(game);
       const launchUrl = game.config && game.config.launchUrl ? String(game.config.launchUrl).trim() : '';
-      const imageUrl = game.imageUrl && String(game.imageUrl).trim() ? String(game.imageUrl).trim() : 'em-breve-thumb.jpg';
-      const classes = index === 0 ? 'game-card item-1' : 'game-card coming-soon';
+      const imageUrl = getGameBaseImage(game, index);
+      const classes = 'game-card item-1';
 
       return `
       <article class="${classes}" tabindex="0" data-game-id="${
@@ -487,7 +519,13 @@ function renderGamesGrid() {
 async function loadGamesCatalog() {
   try {
     const data = await apiFetch('/games?isActive=true&limit=50&page=1&sortBy=createdAt:desc');
-    state.games = Array.isArray(data.results) ? data.results : [];
+    if (Array.isArray(data)) {
+      state.games = data;
+    } else if (data && Array.isArray(data.results)) {
+      state.games = data.results;
+    } else {
+      state.games = [];
+    }
   } catch (error) {
     state.games = [];
   }
@@ -794,7 +832,7 @@ async function openEditGameModal() {
     document.getElementById('fnxEditGameDescription').value = game.description || '';
     document.getElementById('fnxEditGameImage').value = game.imageUrl || '';
     document.getElementById('fnxEditGameLaunch').value = config.launchUrl || '';
-    document.getElementById('fnxEditGameCategory').value = config.category || '';
+    document.getElementById('fnxEditGameCategory').value = game.category || config.category || '';
     document.getElementById('fnxEditGameDifficulty').value = config.difficulty || '';
   };
 
@@ -861,6 +899,7 @@ async function openEditGameModal() {
     const payload = {
       slug: document.getElementById('fnxEditGameSlug').value.trim().toLowerCase(),
       title: document.getElementById('fnxEditGameTitle').value.trim(),
+      category: category || game.category || 'arcade',
       description: document.getElementById('fnxEditGameDescription').value.trim() || null,
       imageUrl: document.getElementById('fnxEditGameImage').value.trim() || null,
       config,
@@ -869,7 +908,7 @@ async function openEditGameModal() {
     feedback.textContent = 'Salvando alteracoes...';
     try {
       await apiFetch(`/games/${game.id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         body: JSON.stringify(payload),
       });
 
@@ -1054,6 +1093,12 @@ function bindEvents() {
 }
 
 async function bootstrap() {
+  if (state.user && state.user.role === 'admin' && (!state.token || !state.token.startsWith('mock-access-token-admin-'))) {
+    state.token = '';
+    state.refreshToken = '';
+    state.user = null;
+    persistSession();
+  }
   ensureStylesheetLoaded();
   injectRuntimeStyles();
   runtime.ui = createRuntimeUI();

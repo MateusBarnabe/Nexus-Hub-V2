@@ -59,7 +59,14 @@ public class GameController {
         @ApiResponse(responseCode = "201", description = "Jogo criado"),
         @ApiResponse(responseCode = "400", description = "Dados invalidos")
     })
-    public ResponseEntity<GameDTO> createGame(@RequestBody GameDTO gameDTO) {
+    private boolean isAdminAuthorized(String authHeader) {
+        return authHeader != null && authHeader.startsWith("Bearer mock-access-token-admin-");
+    }
+
+    public ResponseEntity<GameDTO> createGame(@RequestHeader(value = "Authorization", required = false) String authHeader, @RequestBody GameDTO gameDTO) {
+        if (!isAdminAuthorized(authHeader)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         log.info("POST /api/games: Criando novo jogo '{}'", gameDTO.getTitle());
         try {
             GameDTO createdGame = gameService.createGame(gameDTO);
@@ -175,8 +182,12 @@ public class GameController {
         @ApiResponse(responseCode = "400", description = "Dados invalidos")
     })
     public ResponseEntity<GameDTO> updateGame(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @Parameter(description = "ID do jogo") @PathVariable Long gameId,
             @RequestBody GameDTO gameDTO) {
+        if (!isAdminAuthorized(authHeader)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         log.info("PUT /api/games/{}: Atualizando jogo", gameId);
         try {
             GameDTO updatedGame = gameService.updateGame(gameId, gameDTO);
@@ -199,7 +210,10 @@ public class GameController {
         @ApiResponse(responseCode = "204", description = "Jogo removido"),
         @ApiResponse(responseCode = "404", description = "Jogo nao encontrado")
     })
-    public ResponseEntity<Void> deleteGame(@Parameter(description = "ID do jogo") @PathVariable Long gameId) {
+    public ResponseEntity<Void> deleteGame(@RequestHeader(value = "Authorization", required = false) String authHeader, @Parameter(description = "ID do jogo") @PathVariable Long gameId) {
+        if (!isAdminAuthorized(authHeader)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         log.info("DELETE /api/games/{}: Deletando jogo", gameId);
         try {
             gameService.deleteGame(gameId);

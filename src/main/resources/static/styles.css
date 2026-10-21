@@ -119,8 +119,8 @@ body {
     transform: translateY(-2px);
 }
 
-.item-1 { background-image: url('camp-jump-thumb.jpg'); } /* Substituir pela imagem real */
-.coming-soon { background-image: url('em-breve-thumb.jpg'); }
+.item-1 { background-image: url('/camp.jpeg'); }
+.coming-soon { background-image: url('/Em breve.jpeg'); }
 
 .card-content {
     position: absolute;
@@ -155,16 +155,15 @@ body {
 
 .bg-default { opacity: 1; background-image: url('bg-blur.jpg'); }
 
-/* Se o mouse estiver sobre o item 1, mostra o fundo do Camp Jump */
+/* Se o mouse estiver sobre o item 1, mostra o fundo dinâmico do jogo */
 body:has(.item-1:hover) .bg-camp-jump {
     opacity: 1;
-    background-image: url('camp-jump-bg.jpg'); /* Imagem em alta resolução */
 }
 
 /* Se o mouse estiver sobre qualquer 'coming soon', mostra outro fundo */
 body:has(.coming-soon:hover) .bg-soon {
     opacity: 1;
-    background-image: url('castle-bg.jpg');
+    background-image: url('/Em breve.jpeg');
 }
 
 @media (max-width: 980px) {
